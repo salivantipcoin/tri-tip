@@ -19,16 +19,16 @@ LIBS += -L 'C:/Users/Artur/tipcoin/db-4.8.30/build_unix'  -L 'C:/Users/Artur/tip
 QMAKE_CXXFLAGS += -fexceptions
 
 CONFIG( debug, debug|release ) {
-    LIBS += -L 'C:/Users/Artur/boost_1_49_0/stage/lib' -lboost_system-mgw45-mt-d-1_49
-	LIBS +=-lboost_program_options-mgw45-mt-d-1_49  -lboost_filesystem-mgw45-mt-d-1_49 
-	LIBS += -lboost_thread-mgw45-mt-d-1_49  -lboost_chrono-mgw45-mt-d-1_49 
+    LIBS += -L 'C:/Users/Artur/boost_1_49_0/stage/lib' -lboost_system-mgw46-mt-d-1_49
+	LIBS +=-lboost_program_options-mgw45-mt-d-1_49  -lboost_filesystem-mgw46-mt-d-1_49 
+	LIBS += -lboost_thread-mgw46-mt-d-1_49  -lboost_chrono-mgw46-mt-d-1_49 
 } else {
-    LIBS += -L 'C:/Users/Artur/boost_1_49_0/stage/lib' -lboost_system-mgw45-mt-1_49 
-	LIBS +=-lboost_program_options-mgw45-mt-1_49  -lboost_filesystem-mgw45-mt-1_49 
-	LIBS += -lboost_thread-mgw45-mt-1_49   -lboost_chrono-mgw45-mt-1_49 
+    LIBS += -L 'C:/Users/Artur/boost_1_49_0/stage/lib' -lboost_system-mgw46-mt-1_49 
+	LIBS +=-lboost_program_options-mgw45-mt-1_49  -lboost_filesystem-mgw46-mt-1_49 
+	LIBS += -lboost_thread-mgw46-mt-1_49   -lboost_chrono-mgw46-mt-1_49 
 }
 # Input
 HEADERS += applet.hpp key.h serialize.h hash.h allocators.h version.h util.h netbase.h 
 HEADERS += sync.h init.h
-SOURCES += applet.cpp main.cpp sync.cpp util.cpp version.cpp netbase.cpp protocol.cpp db.cpp
-SOURCES += 
+SOURCES += applet.cpp main.cpp sync.cpp util.cpp version.cpp netbase.cpp protocol.cpp db.cpp addrman.cpp
+SOURCES += net.cpp bitcoin_init.cpp bloom.cpp script.cpp core.cpp hash.cpp key.cpp
