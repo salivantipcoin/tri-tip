@@ -3,4 +3,9 @@
 #include "util.h"
 
 void initialise(boost::thread_group& threadGroup);
+
+void loopAndLoadBlock();
+
+
+
 #endif
