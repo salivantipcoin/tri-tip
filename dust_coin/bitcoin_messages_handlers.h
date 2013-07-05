@@ -128,7 +128,6 @@ bool ProcessMessages(CNode* pfrom)
 
 bool SendMessages(CNode* pto, bool fSendTrickle)
 {
-#ifdef ON
 	TRY_LOCK(cs_main, lockMain);
 	if (lockMain) {
 		// Don't send anything until we get their version message
@@ -149,14 +148,6 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 		if (pto->fStartSync && !fImporting && !fReindex) {
 			pto->fStartSync = false;
 			PushGetBlocks(pto, pindexBest, uint256(0));
-		}
-
-		// Resend wallet transactions that haven't gotten in a block yet
-		// Except during reindex, importing and IBD, when old wallet
-		// transactions become unconfirmed and spams other nodes.
-		if (!fReindex && !fImporting && !IsInitialBlockDownload())
-		{
-			ResendWalletTransactions();
 		}
 
 		// Address refresh broadcast
@@ -209,65 +200,6 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 				pto->PushMessage("addr", vAddr);
 		}
 
-
-		//
-		// Message: inventory
-		//
-		vector<CInv> vInv;
-		vector<CInv> vInvWait;
-		{
-			LOCK(pto->cs_inventory);
-			vInv.reserve(pto->vInventoryToSend.size());
-			vInvWait.reserve(pto->vInventoryToSend.size());
-			BOOST_FOREACH(const CInv& inv, pto->vInventoryToSend)
-			{
-				if (pto->setInventoryKnown.count(inv))
-					continue;
-
-				// trickle out tx inv to protect privacy
-				if (inv.type == MSG_TX && !fSendTrickle)
-				{
-					// 1/4 of tx invs blast to all immediately
-					static uint256 hashSalt;
-					if (hashSalt == 0)
-						hashSalt = GetRandHash();
-					uint256 hashRand = inv.hash ^ hashSalt;
-					hashRand = Hash(BEGIN(hashRand), END(hashRand));
-					bool fTrickleWait = ((hashRand & 3) != 0);
-
-					// always trickle our own transactions
-					if (!fTrickleWait)
-					{
-						CWalletTx wtx;
-						if (GetTransaction(inv.hash, wtx))
-							if (wtx.fFromMe)
-								fTrickleWait = true;
-					}
-
-					if (fTrickleWait)
-					{
-						vInvWait.push_back(inv);
-						continue;
-					}
-				}
-
-				// returns true if wasn't already contained in the set
-				if (pto->setInventoryKnown.insert(inv).second)
-				{
-					vInv.push_back(inv);
-					if (vInv.size() >= 1000)
-					{
-						pto->PushMessage("inv", vInv);
-						vInv.clear();
-					}
-				}
-			}
-			pto->vInventoryToSend = vInvWait;
-		}
-		if (!vInv.empty())
-			pto->PushMessage("inv", vInv);
-
-
 		//
 		// Message: getdata
 		//
@@ -293,7 +225,6 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 			pto->PushMessage("getdata", vGetData);
 
 	}
-#endif
 	return true;
 }
 
@@ -617,63 +548,13 @@ reconsider  what  happen her  this  is  advertisment  part
 		CInv inv(MSG_TX, tx.GetHash());
 		pfrom->AddInventoryKnown(inv);
 
-		bool fMissingInputs = false;
-		CValidationState state;
-		if (mempool.accept(state, tx, true, true, &fMissingInputs))
+		if ( mapAlreadyAskedFor.find(inv) )
 		{
-			RelayTransaction(tx, inv.hash, vMsg);
 			mapAlreadyAskedFor.erase(inv);
-			vWorkQueue.push_back(inv.hash);
-			vEraseQueue.push_back(inv.hash);
 
-			// Recursively process any orphan transactions that depended on this one
-			for (unsigned int i = 0; i < vWorkQueue.size(); i++)
-			{
-				uint256 hashPrev = vWorkQueue[i];
-				for (map<uint256, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin();
-					mi != mapOrphanTransactionsByPrev[hashPrev].end();
-					++mi)
-				{
-					const CDataStream& vMsg = *((*mi).second);
-					CTransaction tx;
-					CDataStream(vMsg) >> tx;
-					CInv inv(MSG_TX, tx.GetHash());
-					bool fMissingInputs2 = false;
-					// Use a dummy CValidationState so someone can't setup nodes to counter-DoS based on orphan resolution (that is, feeding people an invalid transaction based on LegitTxX in order to get anyone relaying LegitTxX banned)
-					CValidationState stateDummy;
-
-					if (mempool.accept(stateDummy, tx, true, true, &fMissingInputs2))
-					{
-						printf("   accepted orphan tx %s\n", inv.hash.ToString().c_str());
-						RelayTransaction(tx, inv.hash, vMsg);
-						mapAlreadyAskedFor.erase(inv);
-						vWorkQueue.push_back(inv.hash);
-						vEraseQueue.push_back(inv.hash);
-					}
-					else if (!fMissingInputs2)
-					{
-						// invalid or too-little-fee orphan
-						vEraseQueue.push_back(inv.hash);
-						printf("   removed orphan tx %s\n", inv.hash.ToString().c_str());
-					}
-				}
-			}
-
-			BOOST_FOREACH(uint256 hash, vEraseQueue)
-				EraseOrphanTx(hash);
+			// add inventory transfer them  to  needed  place 
 		}
-		else if (fMissingInputs)
-		{
-			AddOrphanTx(vMsg);
 
-			// DoS prevention: do not allow mapOrphanTransactions to grow unbounded
-			unsigned int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
-			if (nEvicted > 0)
-				printf("mapOrphan overflow, removed %u tx\n", nEvicted);
-		}
-		int nDoS;
-		if (state.IsInvalid(nDoS))
-			pfrom->Misbehaving(nDoS);
 	}
 
 

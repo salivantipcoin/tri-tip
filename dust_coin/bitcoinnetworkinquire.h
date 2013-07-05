@@ -1,6 +1,8 @@
 #ifndef BITCOIN_NETWORK_INQUIRE_H
 #define BITCOIN_NETWORK_INQUIRE_H
 
+map<uint256, CBlockIndex*> mapBlockIndex;
+
 class BitcoinNetworkInquire
 {
 public:
@@ -52,5 +54,64 @@ BitcoinNetworkInquire::pleaseGiveMeTransactionRequest( const uint256& hashIn )
 {
 	m_node->AskFor( CInv(MSG_TX, hashIn ) );
 }
+
+bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
+{
+	// Check for duplicate
+	uint256 hash = pblock->GetHash();
+	if (mapBlockIndex.count(hash))
+		return state.Invalid(error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().c_str()));
+	if (mapOrphanBlocks.count(hash))
+		return state.Invalid(error("ProcessBlock() : already have block (orphan) %s", hash.ToString().c_str()));
+
+	// Preliminary checks
+	if (!pblock->CheckBlock(state))
+		return error("ProcessBlock() : CheckBlock FAILED");
+
+	CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+	if (pcheckpoint && pblock->hashPrevBlock != hashBestChain)
+	{
+		// Extra checks to prevent "fill up memory by spamming with bogus blocks"
+		int64 deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
+		if (deltaTime < 0)
+		{
+			return state.DoS(100, error("ProcessBlock() : block with timestamp before last checkpoint"));
+		}
+		CBigNum bnNewBlock;
+		bnNewBlock.SetCompact(pblock->nBits);
+		CBigNum bnRequired;
+		bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
+		if (bnNewBlock > bnRequired)
+		{
+			return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work"));
+		}
+	}
+
+
+	// If we don't already have its previous block, shunt it off to holding area until we get it
+	if (pblock->hashPrevBlock != 0 && !mapBlockIndex.count(pblock->hashPrevBlock))
+	{
+		printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().c_str());
+
+		// Accept orphans as long as there is a node to request its parents from
+		if (pfrom) {
+			CBlock* pblock2 = new CBlock(*pblock);
+			mapOrphanBlocks.insert(make_pair(hash, pblock2));
+			mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
+
+			// Ask this guy to fill in what we're missing
+			PushGetBlocks(pfrom, pindexBest, GetOrphanRoot(pblock2));
+		}
+		return true;
+	}
+
+	//  enlist  this  block on  the  waiting  map 
+
+
+
+
+	return true;
+}
+
 
 #endif
