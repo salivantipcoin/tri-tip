@@ -31,4 +31,5 @@ CONFIG( debug, debug|release ) {
 HEADERS += applet.hpp key.h serialize.h hash.h allocators.h version.h util.h netbase.h 
 HEADERS += sync.h init.h
 SOURCES += applet.cpp main.cpp sync.cpp util.cpp version.cpp netbase.cpp protocol.cpp db.cpp addrman.cpp
-SOURCES += net.cpp bitcoin_init.cpp bloom.cpp script.cpp core.cpp hash.cpp key.cpp
+SOURCES += net.cpp bitcoin_init.cpp bloom.cpp script.cpp core.cpp hash.cpp key.cpp dust_coin/bitcoin_messages_handlers.cpp
+SOURCES += alert.cpp checkpoints.cpp 

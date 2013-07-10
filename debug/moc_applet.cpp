@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'applet.hpp'
 **
-** Created: Wed 19. Jun 07:55:34 2013
+** Created: Sun 23. Jun 11:41:44 2013
 **      by: The Qt Meta Object Compiler version 62 (Qt 4.7.4)
 **
 ** WARNING! All changes made in this file will be lost!

@@ -10,6 +10,13 @@
 unsigned char pchMessageStart[4] = { 0xf9, 0xbe, 0xb4, 0xd9 };
 
 
+bool AbortNode(const std::string &strMessage) {
+    printf("*** %s\n", strMessage.c_str());
+    StartShutdown();
+    return false;
+}
+
+
 int main( int argc, char **argv )
 {
 	//QApplication a( argc, argv );
