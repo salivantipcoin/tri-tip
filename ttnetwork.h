@@ -2,17 +2,61 @@
 #ifndef TT_NETWORK_H
 #define TT_NETWORK_H
 
+#include <iostream>
+#include <fstream>
+
+boost::filesystem::path const  basePath = GetDataDir() / ".lock";
+
 namespace  TTcoin
 {
 class BitcoinNetworkGate
 {
 public:
+void addBlock( CBlock const & _block );
 
 void searchForBitcoinTransactions();
 private:
-CBlockIndex* m_orginIndex;
-CTTEnterPointForTransaction m_enterPointForTransaction;
+
+	boost::mutex m_blockListMutex;
+	CBlockIndex* m_orginIndex;
+	CTTEnterPointForTransaction m_enterPointForTransaction;
+
+	std::list< CBlock > m_blocks;
 };
+
+void
+BitcoinNetworkGate::addBlock( CBlock const & _block )
+{
+	boost::mutex::scoped_lock lock(m_blockListMutex);
+	m_blocks.push_back( _block );
+}
+
+
+std::string
+getStartBlockHash() const
+{
+	std::ofstream baseFile( basePath.string().c_str() );
+	if( !baseFile.is_open() )
+		baseFile.open( basePath.string().c_str() , std::fstream::out);
+	
+	std::string startHash << baseFile;
+
+	baseFile.close();
+
+	return startHash;
+}
+
+void
+setStartBlockHash( std::string _hash )
+{
+	std::ofstream baseFile( basePath.string().c_str() );
+	if( !baseFile.is_open() )
+		baseFile.open( basePath.string().c_str() , std::fstream::in);
+
+	baseFile << _hash;
+
+	baseFile.close();
+}
 
 void
 BitcoinNetworkGate::searchForBitcoinTransactions()
