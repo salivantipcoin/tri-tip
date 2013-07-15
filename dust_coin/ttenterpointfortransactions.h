@@ -4,18 +4,41 @@
 namespace TTcoin 
 {
 
+typedef CTransaction CTTtransaction;
+
 class CTTEnterPointForTransaction
 {
-	const CScript m_target;
-	boost::optional< CTransaction > scanInputTransactions(const CTransaction& txIn);
+public:
+	boost::optional< CTransaction > scanOutputOfTransaction( CTransaction const & txIn);
+	void foundTTtransactions(CTransaction const & txIn);
+private:
+	CScript const m_target;
+	std::multimap< unsigned, CTTtransaction > m_ttTransactions;
+	unsigned m_currentBlockTime;
 };
 
-boost::optional< CTransaction >
-CTTEnterPointForTransaction::scanInputTransactions(const CTransaction& txIn)
-{ 
-	boost::optional< CTransaction >()
+CTTEnterPointForTransaction::CTTEnterPointForTransaction()
+	: m_target( CScript() )
+{
+}
 
-	//register  only  from  one  among  them
+boost::optional< CTransaction >
+CTTEnterPointForTransaction::scanOutputOfTransaction(CTransaction const & txIn)
+{ 
+	int64 value;
+
+	BOOST_FOREACH( const CTxOut& txout, txIn.vout )
+	{
+		if ( txout.scriptPubKey == m_target )
+			return boost::optional< CTransaction >( txIn );
+	}
+
+	return boost::optional< CTransaction >();
+}
+
+void
+CTTEnterPointForTransaction::foundTTtransactions(CTransaction const & txIn)
+{
 	std::list< CScript > scripts;
 	int64 value;
 
@@ -26,17 +49,17 @@ CTTEnterPointForTransaction::scanInputTransactions(const CTransaction& txIn)
 	}
 
 	if ( value == 0 )
-		return boost::optional< CTransaction >();
+	return boost::optional< CTransaction >();
 
 	BOOST_FOREACH( const CTxIn& txin, txIn.vin )
 	{
-		// get previous transaction 
-		// most probably  they  have  to  ask  bitcoin  network  about  given  transaction  it  may be  painfull
+		if ( m_ttTransactions.find( txin.prevout.hash ) == m_ttTransactions.end() )
+			return;
 		const CTransaction prevTransact = getTransact( txin.prevout.hash );
 		scripts.push_back( prevTransact.vout[ txin.prevout.n ].scriptPubKey );
 	}
-	
-	CTransaction primaryTransaction;
+
+	CTTtransaction primaryTransaction;
 
 	primaryTransaction.vin.push_back( CTxIn( COutPoint() ) );
 
@@ -47,9 +70,8 @@ CTTEnterPointForTransaction::scanInputTransactions(const CTransaction& txIn)
 
 	primaryTransaction.vout.push_back( out );
 
-	return boost::optional< CTransaction >( primaryTransaction );
+	m_ttTransactions.push_back( std::make_pair( m_currentBlockTime, primaryTransaction ) );
 }
-
 
 }
 

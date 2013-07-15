@@ -7,31 +7,54 @@
 
 boost::filesystem::path const  basePath = GetDataDir() / ".lock";
 
+typedef  CBlock  CTTBlock;
+
 namespace  TTcoin
 {
-class BitcoinNetworkGate
+class CBitcoinNetworkGate
 {
 public:
 void addBlock( CBlock const & _block );
 
-void searchForBitcoinTransactions();
 private:
-
+	void searchForBitcoinTransactions();
+	void processBitcoinNetworkBlocks()
+private:
 	boost::mutex m_blockListMutex;
 	CBlockIndex* m_orginIndex;
 	CTTEnterPointForTransaction m_enterPointForTransaction;
 
 	std::list< CBlock > m_blocks;
+
+	std::map< uint256, CTransaction > m_reclaimedTansactions;
 };
 
 void
-BitcoinNetworkGate::addBlock( CBlock const & _block )
+CBitcoinNetworkGate::addBlock( CBlock const & _block )
 {
 	boost::mutex::scoped_lock lock(m_blockListMutex);
 	m_blocks.push_back( _block );
 }
 
 
+void 
+processBitcoinNetworkBlocks()
+{
+	while(1)
+	{
+		{
+
+		boost::mutex::scoped_lock lock(m_blockListMutex);
+		BOOST_FOREACH( CBlock const & block, m_blocks )
+		{
+			block.BuildMerkleTree();
+		}
+
+		}
+		MilliSleep(1);
+	}
+
+}
 std::string
 getStartBlockHash() const
 {
@@ -59,19 +82,13 @@ setStartBlockHash( std::string _hash )
 }
 
 void
-BitcoinNetworkGate::searchForBitcoinTransactions()
+CBitcoinNetworkGate::searchForBitcoinTransactions( CBlock & block )
 {
 	int ret = 0;
 	{
 		LOCK(cs_wallet);
 		while (m_orginIndex)
 		{
-
-			m_orginIndex = m_orginIndex->GetNextInMainChain();
-
-			CBlock block;
-			block.ReadFromDisk( m_orginIndex );
-
 			std::vector< CTransaction >transactions;
 
 			BOOST_FOREACH(CTransaction& tx, block.vtx)

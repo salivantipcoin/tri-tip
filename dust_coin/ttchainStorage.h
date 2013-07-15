@@ -131,6 +131,55 @@ CTTChainStorage::CTTChainStorage()
 	}
 }
 
+std::map< long long, CTTtransaction > m_approvedTransaction;
+
+void
+g()
+{
+	std::map< long long, CTTtransaction >::const_iterator iterator;
+	iterator = m_approvedTransaction.begin();
+
+	unsigned const  blockCountLimit = 1000;
+	unsigned const  blockTimePeriod = 10000;
+	int  tmpBlockCountLimit = -1, tmpBlockTimePeriod = -1;
+
+	CTTBlock block;
+
+	while( 1 )
+	{
+		if ( iterator == m_approvedTransaction.end() )
+		{
+			if ( block.IsNull() )
+				block.WriteToDisk();
+
+			break;
+		}
+
+		if ( tmpBlockCountLimit < 0 || tmpBlockTimePeriod < 0 )
+		{
+			tmpBlockCountLimit = blockCountLimit;
+			tmpBlockTimePeriod = blockTimePeriod;
+
+			if ( block.IsNull() )
+			{
+				//build  merkle tree
+				//setDate
+				block.WriteToDisk();
+			}
+			block.SetNull();
+		}
+
+		tmpBlockTimePeriod -= iterator->first;
+		--tmpBlockCountLimit;
+		
+		block.vtx.push_back( iterator->second );
+		
+		++iterator;
+	}
+}
+
+
+
 
 }
 #endif

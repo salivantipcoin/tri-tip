@@ -57,6 +57,13 @@ INFO  can  fight but  how
 INFO may  not  work  on  certain  nodes  then they  will be  part  of  Network 
 
 node  could  never  KNOW 
+ok 
+INFO 
+INFO - double spending will cancel if  created  from  other  node, if  created  from behind it  will be  droped
+
+IN OPOSITE  DIRECTION  ACK after  that no way to cancel operation at  all
+
+
 
 
 
