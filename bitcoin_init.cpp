@@ -228,4 +228,23 @@ initialise(boost::thread_group& threadGroup)
     printf("mapAddressBook.size() = %"PRIszu"\n",  pwalletMain->mapAddressBook.size());*/
 
     StartNode(threadGroup);
+
+//   threadGroup.create_thread(boost::bind(&LoopForever<void (*)()>, "", &handleClients));
+
+
+//   threadGroup.create_thread(boost::bind(&LoopForever<void (*)()>, "", &));  **  set  of  ttcomunication threads
+
+//   threadGroup.create_thread(boost::bind(&LoopForever<void (*)()>, "", &createProveOfWork));
+
+//   threadGroup.create_thread(boost::bind(&LoopForever<void (*)()>, "", &createProveOfWork));
+
+//   threadGroup.create_thread(boost::bind(&LoopForever<void (*)()>, "", &handleBlocks));  // introduce  transactions, handle synchronizations, handle blockchain
+/*
+    turn out  to  be  a  lot  of  thread  -ttnetwork  thread -  comunicate  with  ttnetwork  handle  transaction  old  ways 
+// in  this  app  there  will be  a lot  of  threads 
+
+	thread  communication  with  clients 
+    thread work -  make  all  prove of  work  stuff 
+    thread check   for  correctnes  of  transactions and  introduce them to a block
+*/
 }

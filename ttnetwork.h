@@ -121,9 +121,13 @@ class CTTNetwork
 
 
 //block  chain of  transactions
-
-// merkle  tree
-
+/*
+thread bitcoin -  comunicate  with  bitcoin network  fetch  transaction
+ttnetwork  thread -  comunicate  with  ttnetwork  handle  transaction  old  ways 
+thread work -  make  all  prove of  work  stuff 
+thread check   for  correctnes  of  transactions and  introduce them to a block
+--commnication protocol-- biggest issue
+*/
 }
 // state machine  to  handle  traffic
 
