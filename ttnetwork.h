@@ -9,6 +9,7 @@ boost::filesystem::path const  basePath = GetDataDir() / ".lock";
 
 typedef  CBlock  CTTBlock;
 
+
 namespace  TTcoin
 {
 class CBitcoinNetworkGate
@@ -68,6 +69,23 @@ getStartBlockHash() const
 
 	return startHash;
 }
+
+
+CBlockIndex * createBitcoinIndex( std::string _blockHash )
+{
+	CBlockIndex * blockIndex = new CBlockIndex;
+
+	blockIndex->phashBlock = new uint256( _blockHash );
+
+	return blockIndex;
+}
+
+void
+setCurrentBlockBitcoinIndex()
+{
+	pindexBest = createBitcoinIndex( getStartBlockHash() );
+}
+
 
 void
 setStartBlockHash( std::string _hash )

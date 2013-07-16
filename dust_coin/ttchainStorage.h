@@ -14,8 +14,6 @@ class CTTChainStorage
 CTTChainStorage::CTTChainStorage()
 {
 
-	fReindex = GetBoolArg("-reindex", false);
-
 	// Upgrading to 0.8; hard-link the old blknnnn.dat files into /blocks/
 	filesystem::path blocksDir = GetDataDir() / "blocks";
 	if (!filesystem::exists(blocksDir))
@@ -37,10 +35,7 @@ CTTChainStorage::CTTChainStorage()
 				break;
 			}
 		}
-		if (linked)
-		{
-			fReindex = true;
-		}
+
 	}
 
 	// cache size calculations
@@ -73,9 +68,6 @@ CTTChainStorage::CTTChainStorage()
 				pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
 				pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
 				pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
-
-				if (fReindex)
-					pblocktree->WriteReindexing(true);
 
 				if (!LoadBlockIndex()) {
 					strLoadError = _("Error loading block database");
@@ -112,24 +104,14 @@ CTTChainStorage::CTTChainStorage()
 			fLoaded = true;
 		} while(false);
 
-		if (!fLoaded) {
-			// first suggest a reindex
-			if (!fReset) {
-				bool fRet = uiInterface.ThreadSafeMessageBox(
-					strLoadError + ".\n\n" + _("Do you want to rebuild the block database now?"),
-					"", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
-				if (fRet) {
-					fReindex = true;
-					fRequestShutdown = false;
-				} else {
-					return false;
-				}
-			} else {
-				return InitError(strLoadError);
-			}
+		if (!fLoaded) {}
 		}
 	}
 }
+
+
+FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeight, uint64 nTime, bool fKnown = false)
+
 
 std::map< long long, CTTtransaction > m_approvedTransaction;
 
