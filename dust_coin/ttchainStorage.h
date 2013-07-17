@@ -115,6 +115,7 @@ FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAddSize,
 
 std::map< long long, CTTtransaction > m_approvedTransaction;
 
+
 void
 g()
 {

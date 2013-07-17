@@ -28,7 +28,20 @@ private:
 	std::list< CBlock > m_blocks;
 
 	std::map< uint256, CTransaction > m_reclaimedTansactions;
+
+	std::vector< CTransaction >m_transactions;
 };
+/*
+  zebranie  tranzakcji z  bloku 
+zarz¹danie tranzakcji   uzupe³niaj¹cych 
+ wpisanie  wszystkiego do dobrych tranazakcji z  nich  stworzone  zostan¹  bloki
+
+zapisanie  bloków  w pliku 
+okreœlenie  sposobu  podmiany  bloków  potrzebnego  tak  czy  siak
+
+
+*/
+
 
 void
 CBitcoinNetworkGate::addBlock( CBlock const & _block )
@@ -49,7 +62,9 @@ processBitcoinNetworkBlocks()
 		BOOST_FOREACH( CBlock const & block, m_blocks )
 		{
 			block.BuildMerkleTree();
+			searchForBitcoinTransactions( block );
 		}
+		m_blocks.erase();
 
 		}
 		MilliSleep(1);
@@ -107,7 +122,7 @@ CBitcoinNetworkGate::searchForBitcoinTransactions( CBlock & block )
 		LOCK(cs_wallet);
 		while (m_orginIndex)
 		{
-			std::vector< CTransaction >transactions;
+
 
 			BOOST_FOREACH(CTransaction& tx, block.vtx)
 			{
@@ -121,6 +136,18 @@ CBitcoinNetworkGate::searchForBitcoinTransactions( CBlock & block )
 	}
 	return ret;
 }
+
+void 
+verifyTransactionCorrect()
+{
+	// possibly hash have to be checked 
+	// Verify signature
+	CScriptCheck check(coins, tx, i, flags, 0);
+	if (pvChecks) {
+		pvChecks->push_back(CScriptCheck());
+}
+
+
 
 class CTTNetwork
 {
